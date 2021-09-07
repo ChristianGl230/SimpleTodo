@@ -1,4 +1,8 @@
-package com.example.simpletodo;
+ackage com.example.simpletodo;
+
+import static android.os.FileUtils.*;
+
+import static org.apache.commons.io.FileUtils.readLines;
 
 import android.os.Bundle;
 import android.os.FileUtils;
@@ -7,23 +11,28 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 
 
 public class MainActivity extends AppCompatActivity {
-    ArrayList items;
+    ArrayList items = new ArrayList<>(readLines(getDataFile(), Charset.defaultCharset()));
 
     Button btnAdd;
     EditText etItem;
     RecyclerView rvItems;
     ItemsAdaptor itemsAdaptor;
+
+    public MainActivity() throws IOException {
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,10 +43,10 @@ public class MainActivity extends AppCompatActivity {
         etItem = findViewById(R.id.etItem);
         rvItems = findViewById(R.id.rvItems);
 
-        items = new ArrayList<>();
-        items.add("Buy milk");
-        items.add("Go to the gym");
-        items.add("Have fun!");
+        loadItems();
+        //items.add("Buy milk");
+        //items.add("Go to the gym");
+        //items.add("Have fun!");
 
         ItemsAdaptor.OnLongClickListener onLongClickListener = new ItemsAdaptor.OnLongClickListener(){
             @Override
@@ -47,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
                 //Notify the adapter
                 itemsAdaptor.notifyItemRemoved(position);
                 Toast.makeText(getApplicationContext(),"Item was removed", Toast.LENGTH_SHORT).show();
-
+                saveItems();
 
             }
         };
@@ -65,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
                 itemsAdaptor.notifyItemInserted(items.size() -1);
                 etItem.setText("");
                 Toast.makeText(getApplicationContext(),"Item was added", Toast.LENGTH_SHORT).show();
+                saveItems();
             }
         });
 
@@ -75,11 +85,23 @@ public class MainActivity extends AppCompatActivity {
 
     //this function will load items by reading every line of the data file
     private void loadItems() {
-           //items = new ArrayList<>(FileUtils.readLines(getDataFile(), Charset.defaultCharset()));
+        try {
+            items = new ArrayList<>(readLines(getDataFile(), Charset.defaultCharset()))
+        } catch (IOException e) {
+            Log.e ("MainActivity", "Error reading items",e);
+            items= new ArrayList<>();
+
+        }
     }
 
     //this function saves items by writing them into the data file
     private void saveItems() {
-        //FileUtils.writelines(getDataFile(), items);
+        try {
+            FileUtils.writelines(getDataFile(), items);
+        }
+        catch(IDException e) {
+            Log.e ("MainActivity", "Error reading items", e);
+        }
+
     }
 }
